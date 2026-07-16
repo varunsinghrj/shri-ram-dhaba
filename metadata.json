@@ -1,0 +1,6 @@
+{
+  "name": "Shri Ram Dhaba",
+  "description": "Premium vegetarian food ordering app for Shri Ram Dhaba featuring an interactive menu, local basket persistence, secure checkout, and simulated real-time order GPS route tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

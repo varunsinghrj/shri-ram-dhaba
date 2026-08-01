@@ -3,4 +3,4 @@
   publish = "dist"
 
 [build.environment]
-  VITE_API_URL = "https://shri-ram-dhaba-api.onrender.com/api"
+  VITE_API_URL = "https://shri-ram-dhaba.onrender.com/api"

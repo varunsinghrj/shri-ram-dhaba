@@ -7,7 +7,6 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import rateLimit from 'express-rate-limit';
 import { connectDB } from './db.js';
 import authRoutes from './routes/auth.js';
 import orderRoutes from './routes/orders.js';
@@ -45,29 +44,10 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
-// Rate limiting
-const authLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 500,
-  message: { error: 'Too many attempts. Please try again later.' },
-});
-
-const adminLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 500,
-  message: { error: 'Too many attempts. Please try again later.' },
-});
-
-const orderLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 500,
-  message: { error: 'Too many requests. Please slow down.' },
-});
-
 // Routes
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/orders', orderLimiter, orderRoutes);
-app.use('/api/admin', adminLimiter, adminRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

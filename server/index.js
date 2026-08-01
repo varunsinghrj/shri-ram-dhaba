@@ -47,20 +47,20 @@ app.use(cookieParser());
 
 // Rate limiting
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
+  windowMs: 1 * 60 * 1000,
+  max: 500,
   message: { error: 'Too many attempts. Please try again later.' },
 });
 
 const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 1 * 60 * 1000,
+  max: 500,
   message: { error: 'Too many attempts. Please try again later.' },
 });
 
 const orderLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 30,
+  windowMs: 1 * 60 * 1000,
+  max: 500,
   message: { error: 'Too many requests. Please slow down.' },
 });
 

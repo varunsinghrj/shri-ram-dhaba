@@ -11,7 +11,7 @@ router.post('/', authMiddleware, [
   body('deliveryDetails.fullName').trim().isLength({ min: 1, max: 100 }).withMessage('Name required'),
   body('deliveryDetails.mobile').matches(/^[6-9]\d{9}$/).withMessage('Valid mobile required'),
   body('deliveryDetails.address').trim().isLength({ min: 5, max: 500 }).withMessage('Address required'),
-  body('paymentMethod').custom(v => { if (v && v.toLowerCase() !== 'cod') throw new Error('Only COD is accepted'); }).withMessage('Only COD is accepted'),
+  body('paymentMethod').optional().isString(),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

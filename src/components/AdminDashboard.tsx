@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, Search, ChevronLeft, User, Phone, MapPin, Package, IndianRupee, Lock, UserCircle, AlertCircle, Trash2, ChevronDown, Users, ShoppingCart, Mail, Calendar } from 'lucide-react';
+import { ClipboardList, Search, ChevronLeft, User, Phone, MapPin, Package, IndianRupee, Lock, UserCircle, AlertCircle, Trash2, ChevronDown, Users, ShoppingCart, Mail, Calendar, RefreshCw } from 'lucide-react';
 import { Order, User as UserType } from '../types';
 import { api } from '../api';
 
@@ -21,7 +21,7 @@ export default function AdminDashboard({
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'users'>('orders');
+  const [activeTab, setActiveTab] = useState<'new' | 'completed' | 'users'>('new');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -34,6 +34,7 @@ export default function AdminDashboard({
   const [showDeleteUserConfirm, setShowDeleteUserConfirm] = useState<string | null>(null);
 
   const [stats, setStats] = useState({ totalOrders: 0, todayOrders: 0, totalRevenue: 0, totalUsers: 0 });
+  const [loadError, setLoadError] = useState('');
 
   // Check admin auth on mount
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function AdminDashboard({
 
   const loadDashboardData = async () => {
     try {
+      setLoadError('');
       const [ordersData, usersData, statsData] = await Promise.all([
         api.adminGetOrders(statusFilter !== 'all' ? statusFilter : undefined),
         api.adminGetUsers(),
@@ -56,10 +58,17 @@ export default function AdminDashboard({
       setUsers(usersData);
       setStats(statsData);
       onUpdateOrders(ordersData);
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      setLoadError(err.message || 'Failed to load data');
     }
   };
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, statusFilter]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -224,6 +233,9 @@ export default function AdminDashboard({
            user.mobile.includes(userSearchQuery);
   });
 
+  const newOrders = filteredOrders.filter(o => ['confirmed', 'preparing', 'out_for_delivery'].includes(o.status));
+  const completedOrders = filteredOrders.filter(o => ['delivered', 'cancelled'].includes(o.status));
+
   const getUserOrderCount = (userId: string) => {
     return ordersList.filter(order => order.userId === userId).length;
   };
@@ -262,13 +274,29 @@ export default function AdminDashboard({
           <ChevronLeft size={18} />
           <span>Return to Site</span>
         </button>
-        <button 
-          onClick={handleLogout}
-          className="px-4 py-2 bg-[#ac2d00]/10 hover:bg-[#ac2d00] text-[#ac2d00] hover:text-white rounded-xl font-semibold text-xs transition-all border border-[#ac2d00]/30 hover:border-[#ac2d00]"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={loadDashboardData}
+            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#ffe9e2] text-[#5b4039] rounded-xl font-semibold text-xs transition-all border border-[#e4beb4]"
+          >
+            <RefreshCw size={14} />
+            Refresh
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="px-4 py-2 bg-[#ac2d00]/10 hover:bg-[#ac2d00] text-[#ac2d00] hover:text-white rounded-xl font-semibold text-xs transition-all border border-[#ac2d00]/30 hover:border-[#ac2d00]"
+          >
+            Logout
+          </button>
+        </div>
       </div>
+
+      {loadError && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-6">
+          <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
+          <span className="text-xs text-red-600 font-semibold">{loadError}</span>
+        </div>
+      )}
 
       {/* Title */}
       <div className="mb-8">
@@ -325,17 +353,28 @@ export default function AdminDashboard({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         <button
-          onClick={() => setActiveTab('orders')}
+          onClick={() => setActiveTab('new')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-            activeTab === 'orders'
+            activeTab === 'new'
               ? 'bg-[#ac2d00] text-white shadow-md'
               : 'bg-white text-[#5b4039] border border-[#e4beb4] hover:bg-[#ffe9e2]'
           }`}
         >
           <ShoppingCart size={16} />
-          Orders ({stats.totalOrders})
+          New Orders ({newOrders.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('completed')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+            activeTab === 'completed'
+              ? 'bg-[#268451] text-white shadow-md'
+              : 'bg-white text-[#5b4039] border border-[#e4beb4] hover:bg-[#ffe9e2]'
+          }`}
+        >
+          <Package size={16} />
+          Completed ({completedOrders.length})
         </button>
         <button
           onClick={() => setActiveTab('users')}
@@ -351,7 +390,7 @@ export default function AdminDashboard({
       </div>
 
       {/* Orders Tab */}
-      {activeTab === 'orders' && (
+      {(activeTab === 'new' || activeTab === 'completed') && (
         <>
           <div className="bg-white border border-[#e4beb4] rounded-2xl p-4 sm:p-6 mb-6 shadow-sm">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -371,18 +410,26 @@ export default function AdminDashboard({
                 className="px-4 py-2.5 border border-[#e4beb4] rounded-xl text-sm font-semibold text-[#5b4039] focus:outline-none focus:ring-1 focus:ring-[#ac2d00] bg-[#fff8f6]"
               >
                 <option value="all">All Status</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="preparing">Preparing</option>
-                <option value="out_for_delivery">Out for Delivery</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+                {activeTab === 'new' && (
+                  <>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="out_for_delivery">Out for Delivery</option>
+                  </>
+                )}
+                {activeTab === 'completed' && (
+                  <>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </>
+                )}
               </select>
             </div>
           </div>
 
           <div className="space-y-4">
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => (
+            {(activeTab === 'new' ? newOrders : completedOrders).length > 0 ? (
+              (activeTab === 'new' ? newOrders : completedOrders).map((order) => (
                 <div 
                   key={order.id}
                   className="bg-white border border-[#e4beb4] rounded-2xl overflow-hidden shadow-sm"
@@ -524,8 +571,12 @@ export default function AdminDashboard({
             ) : (
               <div className="text-center py-16 bg-white rounded-3xl border border-[#e4beb4]">
                 <ClipboardList size={40} className="text-gray-300 mx-auto mb-4" />
-                <h3 className="font-serif font-bold text-lg text-[#261813]">No orders found</h3>
-                <p className="text-xs text-[#5b4039] mt-2">Orders will appear here when customers place them.</p>
+                <h3 className="font-serif font-bold text-lg text-[#261813]">
+                  {activeTab === 'new' ? 'No new orders' : 'No completed orders'}
+                </h3>
+                <p className="text-xs text-[#5b4039] mt-2">
+                  {activeTab === 'new' ? 'New orders will appear here.' : 'Delivered and cancelled orders will appear here.'}
+                </p>
               </div>
             )}
           </div>

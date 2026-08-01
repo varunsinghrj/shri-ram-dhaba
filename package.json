@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000",
-    "build": "vite build",
+    "build": "cd server && npm install",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "server": "cd server && node index.js",
-    "start": "vite --port=3000 & cd server && node index.js"
+    "start": "cd server && node index.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

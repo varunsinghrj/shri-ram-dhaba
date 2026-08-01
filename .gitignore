@@ -4,5 +4,9 @@ dist/
 coverage/
 .DS_Store
 *.log
-.env*
-!.env.example
+.env
+server/data/
+server/node_modules/
+
+# Local Netlify folder
+.netlify

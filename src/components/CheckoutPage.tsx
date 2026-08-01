@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Truck, Landmark, ClipboardList, Wallet, Sparkles, AlertCircle } from 'lucide-react';
-import { CartItem, DeliveryDetails, MenuItem } from '../types';
+import { ChevronLeft, Truck, Landmark, ClipboardList, Wallet, Sparkles, AlertCircle, LogIn, User } from 'lucide-react';
+import { CartItem, DeliveryDetails, MenuItem, User as UserType } from '../types';
 
 interface CheckoutPageProps {
   cart: CartItem[];
   setView: (view: string) => void;
   onPlaceOrder: (details: DeliveryDetails, paymentMethod: string) => void;
+  currentUser: UserType | null;
 }
 
 export default function CheckoutPage({
   cart,
   setView,
   onPlaceOrder,
+  currentUser,
 }: CheckoutPageProps) {
   // Details state
   const [fullName, setFullName] = useState('');
@@ -20,8 +22,8 @@ export default function CheckoutPage({
   const [landmark, setLandmark] = useState('');
   const [instructions, setInstructions] = useState('');
   
-  // Payment option
-  const [paymentMethod, setPaymentMethod] = useState('UPI'); // default
+  // Payment option - COD only
+  const [paymentMethod] = useState('COD');
 
   // Validation
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,6 +72,28 @@ export default function CheckoutPage({
       }, paymentMethod);
     }
   };
+
+  // Show login prompt if not logged in
+  if (!currentUser) {
+    return (
+      <div className="w-full bg-[#fff8f6] py-20 text-center flex flex-col items-center justify-center max-w-[1200px] mx-auto px-4 sm:px-6">
+        <div className="w-16 h-16 bg-[#ffe9e2] rounded-full flex items-center justify-center text-[#ac2d00] mb-4">
+          <User size={32} />
+        </div>
+        <h2 className="font-serif font-bold text-2xl text-[#261813]">Login Required</h2>
+        <p className="text-sm text-[#5b4039] max-w-sm mt-2">
+          Please login or create an account to place your order.
+        </p>
+        <button 
+          onClick={() => setView('login')}
+          className="mt-6 px-6 py-3 bg-[#ac2d00] text-white rounded-xl font-bold text-sm hover:bg-[#d63c05] flex items-center gap-2"
+        >
+          <LogIn size={16} />
+          Login / Register
+        </button>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -234,66 +258,17 @@ export default function CheckoutPage({
               <h2 className="font-serif font-bold text-lg sm:text-xl text-[#261813]">Payment Method</h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               
-              {/* UPI */}
-              <div 
-                onClick={() => setPaymentMethod('UPI')}
-                className={`border rounded-2xl p-4 flex flex-col justify-between items-start gap-4 cursor-pointer transition-all ${
-                  paymentMethod === 'UPI' 
-                    ? 'border-[#ac2d00] bg-[#fff1ec] shadow-md ring-1 ring-[#ac2d00]' 
-                    : 'border-[#e4beb4] bg-[#fff8f6] hover:bg-[#ffe9e2]/30'
-                }`}
-                id="payment-upi-box"
-              >
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-bold text-sm text-[#261813]">UPI / GPay / PhonePe</span>
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                    paymentMethod === 'UPI' ? 'border-[#ac2d00] bg-[#ac2d00]' : 'border-gray-300'
-                  }`}>
-                    {paymentMethod === 'UPI' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                  </div>
-                </div>
-                <span className="text-[10px] text-[#5b4039]">Instant QR / App payment</span>
-              </div>
-
-              {/* Card */}
-              <div 
-                onClick={() => setPaymentMethod('CARD')}
-                className={`border rounded-2xl p-4 flex flex-col justify-between items-start gap-4 cursor-pointer transition-all ${
-                  paymentMethod === 'CARD' 
-                    ? 'border-[#ac2d00] bg-[#fff1ec] shadow-md ring-1 ring-[#ac2d00]' 
-                    : 'border-[#e4beb4] bg-[#fff8f6] hover:bg-[#ffe9e2]/30'
-                }`}
-                id="payment-card-box"
-              >
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-bold text-sm text-[#261813]">Online Card Payment</span>
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                    paymentMethod === 'CARD' ? 'border-[#ac2d00] bg-[#ac2d00]' : 'border-gray-300'
-                  }`}>
-                    {paymentMethod === 'CARD' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                  </div>
-                </div>
-                <span className="text-[10px] text-[#5b4039]">Debit / Credit Cards accepted</span>
-              </div>
-
               {/* Cash on Delivery */}
               <div 
-                onClick={() => setPaymentMethod('COD')}
-                className={`border rounded-2xl p-4 flex flex-col justify-between items-start gap-4 cursor-pointer transition-all ${
-                  paymentMethod === 'COD' 
-                    ? 'border-[#ac2d00] bg-[#fff1ec] shadow-md ring-1 ring-[#ac2d00]' 
-                    : 'border-[#e4beb4] bg-[#fff8f6] hover:bg-[#ffe9e2]/30'
-                }`}
+                className="border rounded-2xl p-4 flex flex-col justify-between items-start gap-4 border-[#ac2d00] bg-[#fff1ec] shadow-md ring-1 ring-[#ac2d00]"
                 id="payment-cod-box"
               >
                 <div className="flex justify-between items-center w-full">
                   <span className="font-bold text-sm text-[#261813]">Cash on Delivery</span>
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                    paymentMethod === 'COD' ? 'border-[#ac2d00] bg-[#ac2d00]' : 'border-gray-300'
-                  }`}>
-                    {paymentMethod === 'COD' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  <div className="w-4 h-4 rounded-full border flex items-center justify-center border-[#ac2d00] bg-[#ac2d00]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
                   </div>
                 </div>
                 <span className="text-[10px] text-[#5b4039]">Pay upon doorstep arrival</span>

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Menu, Search, ShoppingCart, X, MapPin, User, Receipt, Phone, Heart, Info, Percent } from 'lucide-react';
-import { CartItem } from '../types';
+import { Menu, ShoppingCart, X, MapPin, User, Receipt, Phone, Heart, Info, Percent, LogOut, LogIn, Package, Settings } from 'lucide-react';
+import { CartItem, User as UserType } from '../types';
 
 interface HeaderProps {
   currentView: string;
   setView: (view: string) => void;
   cart: CartItem[];
   toggleCartSidebar: () => void;
-  onSearchChange?: (query: string) => void;
-  activeSearchQuery?: string;
+  currentUser: UserType | null;
+  onLogout: () => void;
 }
 
 export default function Header({
@@ -16,11 +16,10 @@ export default function Header({
   setView,
   cart,
   toggleCartSidebar,
-  onSearchChange,
-  activeSearchQuery = '',
+  currentUser,
+  onLogout,
 }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const totalCartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -133,47 +132,6 @@ export default function Header({
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
             
-            {/* Search Input inline or toggle */}
-            <div className="relative">
-              {isSearchOpen ? (
-                <div className="flex items-center gap-1 bg-[#fff1ec] border border-[#ac2d00] rounded-full px-3 py-1.5 w-48 sm:w-64 animate-fade-in">
-                  <Search size={18} className="text-[#ac2d00]" />
-                  <input 
-                    type="text" 
-                    placeholder="Search Paneer, Dal, Roti..."
-                    value={activeSearchQuery}
-                    onChange={(e) => {
-                      if (onSearchChange) onSearchChange(e.target.value);
-                    }}
-                    className="bg-transparent border-none focus:outline-none text-xs text-[#261813] w-full p-0 leading-none focus:ring-0"
-                    autoFocus
-                    id="search-input-box"
-                  />
-                  <button 
-                    onClick={() => {
-                      setIsSearchOpen(false);
-                      if (onSearchChange) onSearchChange('');
-                    }}
-                    className="text-[#5b4039] hover:text-[#ac2d00]"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={() => {
-                    setView('menu');
-                    setIsSearchOpen(true);
-                  }}
-                  className="p-2 text-[#5b4039] hover:text-[#ac2d00] hover:bg-[#fff1ec] rounded-full transition-all"
-                  title="Search dishes"
-                  id="search-icon-btn"
-                >
-                  <Search size={22} />
-                </button>
-              )}
-            </div>
-
             {/* Shopping Cart Button */}
             <button 
               onClick={toggleCartSidebar}
@@ -189,31 +147,68 @@ export default function Header({
               )}
             </button>
 
+            {/* User Login/Logout or User Info */}
+            {currentUser ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <button 
+                  onClick={() => setView('my-orders')}
+                  className="p-2 text-[#5b4039] hover:text-[#ac2d00] hover:bg-[#fff1ec] rounded-full transition-all"
+                  title="My Orders"
+                >
+                  <Package size={18} />
+                </button>
+                <button 
+                  onClick={() => setView('profile')}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#ffe9e2] rounded-full hover:bg-[#ffd9cc] transition-all"
+                >
+                  <div className="w-6 h-6 bg-[#ac2d00] rounded-full flex items-center justify-center">
+                    <User size={12} className="text-white" />
+                  </div>
+                  <span className="text-xs font-semibold text-[#5b4039] max-w-[80px] truncate">{currentUser.name}</span>
+                </button>
+                <button 
+                  onClick={onLogout}
+                  className="p-2 text-[#5b4039] hover:text-[#ac2d00] hover:bg-[#fff1ec] rounded-full transition-all"
+                  title="Logout"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setView('login')}
+                className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-[#ac2d00] hover:bg-[#fff1ec] rounded-full transition-all border border-[#ac2d00]/30"
+              >
+                <LogIn size={16} />
+                <span className="text-xs font-semibold">Login</span>
+              </button>
+            )}
+
             {/* Order Online Button */}
             <button 
               onClick={() => setView('menu')}
               className="hidden sm:block bg-[#ac2d00] hover:bg-[#d63c05] text-[#ffffff] px-5 py-2.5 rounded-full font-semibold text-sm transition-all active:scale-95 shadow-md hover:shadow-lg"
               id="order-online-nav-btn"
             >
-              Order Online
+Order Now
             </button>
 
           </div>
         </div>
       </header>
 
-      {/* Drawer Menu Overlay */}
+      {/* Drawer Menu Overlay - Mobile only */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-50 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
           id="drawer-overlay"
         />
       )}
 
-      {/* Side Menu Drawer Content */}
+      {/* Side Menu Drawer Content - Mobile only */}
       <aside 
-        className={`fixed left-0 top-0 h-full w-80 z-50 bg-[#fff8f6] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-full w-80 z-50 bg-[#fff8f6] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out md:hidden ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         id="drawer-menu-aside"
@@ -230,17 +225,58 @@ export default function Header({
           <div className="w-16 h-16 rounded-full bg-[#ac2d00] flex items-center justify-center mb-4 border-2 border-white shadow-lg">
             <User size={36} className="text-white" />
           </div>
-          <h2 className="font-serif font-bold text-xl text-[#ac2d00]">Welcome Guest!</h2>
-          <p className="text-xs text-[#5b4039] mt-1">Savor Authentic Highway Dhaba Flavors</p>
-          <button 
-            onClick={() => {
-              setView('menu');
-              setIsMobileMenuOpen(false);
-            }}
-            className="mt-4 px-5 py-2 bg-[#ac2d00] text-white rounded-xl text-xs font-semibold hover:bg-[#d63c05] transition-all shadow-md w-full text-center"
-          >
-            Start Ordering
-          </button>
+          {currentUser ? (
+            <>
+              <h2 className="font-serif font-bold text-xl text-[#ac2d00]">Welcome, {currentUser.name}!</h2>
+              <p className="text-xs text-[#5b4039] mt-1">{currentUser.email}</p>
+              <div className="flex gap-2 mt-4">
+                <button 
+                  onClick={() => {
+                    setView('my-orders');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex-1 px-5 py-2 bg-[#ac2d00] text-white rounded-xl text-xs font-semibold hover:bg-[#d63c05] transition-all shadow-md text-center flex items-center justify-center gap-2"
+                >
+                  <Package size={14} />
+                  My Orders
+                </button>
+                <button 
+                  onClick={() => {
+                    setView('profile');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex-1 px-5 py-2 bg-white border border-[#ac2d00] text-[#ac2d00] rounded-xl text-xs font-semibold hover:bg-[#ffe9e2] transition-all shadow-md text-center flex items-center justify-center gap-2"
+                >
+                  <Settings size={14} />
+                  Profile
+                </button>
+                <button 
+                  onClick={() => {
+                    onLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="px-5 py-2 bg-white border border-[#ac2d00] text-[#ac2d00] rounded-xl text-xs font-semibold hover:bg-[#ffe9e2] transition-all shadow-md text-center flex items-center justify-center gap-2"
+                >
+                  <LogOut size={14} />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="font-serif font-bold text-xl text-[#ac2d00]">Welcome Guest!</h2>
+              <p className="text-xs text-[#5b4039] mt-1">Login to place your order</p>
+              <button 
+                onClick={() => {
+                  setView('login');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="mt-4 px-5 py-2 bg-[#ac2d00] text-white rounded-xl text-xs font-semibold hover:bg-[#d63c05] transition-all shadow-md w-full text-center flex items-center justify-center gap-2"
+              >
+                <LogIn size={14} />
+                Login / Register
+              </button>
+            </>
+          )}
         </div>
 
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">

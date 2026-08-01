@@ -5,17 +5,22 @@ import MenuPage from './components/MenuPage';
 import CartSidebar from './components/CartSidebar';
 import CheckoutPage from './components/CheckoutPage';
 import OrderTrackingPage from './components/OrderTrackingPage';
+import AdminDashboard from './components/AdminDashboard';
+import UserLogin from './components/UserLogin';
+import UserOrders from './components/UserOrders';
+import UserProfile from './components/UserProfile';
 import Footer from './components/Footer';
-import { MenuItem, CartItem, DeliveryDetails, Order } from './types';
+import { api } from './api';
+import { MenuItem, CartItem, DeliveryDetails, Order, User } from './types';
 
 export default function App() {
   const [currentView, setView] = useState<string>('home');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Load cart from LocalStorage on mount
+  // Load cart from localStorage and check auth on mount
   useEffect(() => {
     try {
       const storedCart = localStorage.getItem('srd_cart');
@@ -23,16 +28,23 @@ export default function App() {
         setCart(JSON.parse(storedCart));
       }
     } catch (e) {
-      console.error('Error loading cart from localStorage', e);
+      console.error('Error loading cart', e);
     }
+
+    // Check if user is still logged in via cookie
+    api.getMe().then(user => {
+      setCurrentUser(user);
+    }).catch(() => {
+      // Not logged in, that's fine
+    });
   }, []);
 
-  // Save cart to LocalStorage on change
+  // Save cart to localStorage on change
   const saveCartToStorage = (newCart: CartItem[]) => {
     try {
       localStorage.setItem('srd_cart', JSON.stringify(newCart));
     } catch (e) {
-      console.error('Error saving cart to localStorage', e);
+      console.error('Error saving cart', e);
     }
   };
 
@@ -65,8 +77,6 @@ export default function App() {
     setCart(updatedCart);
     saveCartToStorage(updatedCart);
 
-    // Microinteraction feedback: open a subtle toast or auto-toggle cart drawer?
-    // Let's keep it clean, but opening cart drawer on thali adds confidence!
     if (item.category === 'Thali' && currentView === 'home') {
       setIsCartOpen(true);
     }
@@ -100,59 +110,47 @@ export default function App() {
     saveCartToStorage(updatedCart);
   };
 
-  const handlePlaceOrder = (deliveryDetails: DeliveryDetails, paymentMethod: string) => {
-    const totalItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-    const subtotal = cart.reduce((acc, item) => acc + item.menuItem.price * item.quantity, 0);
-    const packingFee = 15;
-    const isDeliveryFree = subtotal >= 200;
-    const deliveryFee = isDeliveryFree ? 0 : 30;
-    const totalAmount = subtotal + packingFee + deliveryFee;
-
-    const mockOrderId = 'SRD-' + Math.floor(10000 + Math.random() * 90000);
-    const estimatedTime = isDeliveryFree ? '30 - 40 Mins' : '35 - 45 Mins';
-
-    const newOrder: Order = {
-      id: mockOrderId,
-      items: [...cart],
-      subtotal,
-      packingCharges: packingFee,
-      deliveryFee,
-      total: totalAmount,
-      deliveryDetails,
-      paymentMethod,
-      status: 'confirmed',
-      estimatedTime,
-      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setActiveOrder(newOrder);
-    setView('tracking');
-    
-    // Clear cart upon successful order
-    setCart([]);
-    localStorage.removeItem('srd_cart');
+  const handlePlaceOrder = async (deliveryDetails: DeliveryDetails, paymentMethod: string) => {
+    try {
+      const order = await api.placeOrder({ items: cart, deliveryDetails, paymentMethod });
+      setActiveOrder(order);
+      setView('tracking');
+      setCart([]);
+      localStorage.removeItem('srd_cart');
+    } catch (e: any) {
+      alert(e.message || 'Failed to place order');
+    }
   };
 
   const handleResetOrder = () => {
     setActiveOrder(null);
   };
 
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
+  const handleUserLogin = (user: User) => {
+    setCurrentUser(user);
+  };
+
+  const handleUserLogout = async () => {
+    try {
+      await api.logout();
+    } catch {}
+    setCurrentUser(null);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#fff8f6] font-sans antialiased text-[#261813]">
       
-      {/* Shared Header bar */}
-      <Header 
-        currentView={currentView}
-        setView={setView}
-        cart={cart}
-        toggleCartSidebar={() => setIsCartOpen(!isCartOpen)}
-        onSearchChange={handleSearchChange}
-        activeSearchQuery={searchQuery}
-      />
+      {/* Header - hidden on admin view */}
+      {currentView !== 'admin' && (
+        <Header 
+          currentView={currentView}
+          setView={setView}
+          cart={cart}
+          toggleCartSidebar={() => setIsCartOpen(!isCartOpen)}
+          currentUser={currentUser}
+          onLogout={handleUserLogout}
+        />
+      )}
 
       {/* Main viewport rendering of views */}
       <main className="flex-1">
@@ -168,8 +166,6 @@ export default function App() {
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
             cart={cart}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
           />
         )}
 
@@ -178,6 +174,29 @@ export default function App() {
             cart={cart}
             setView={setView}
             onPlaceOrder={handlePlaceOrder}
+            currentUser={currentUser}
+          />
+        )}
+
+        {currentView === 'login' && (
+          <UserLogin 
+            setView={setView}
+            onLogin={handleUserLogin}
+          />
+        )}
+
+        {currentView === 'my-orders' && currentUser && (
+          <UserOrders 
+            currentUser={currentUser}
+            setView={setView}
+          />
+        )}
+
+        {currentView === 'profile' && currentUser && (
+          <UserProfile 
+            currentUser={currentUser}
+            setCurrentUser={handleUserLogin}
+            setView={setView}
           />
         )}
 
@@ -186,6 +205,14 @@ export default function App() {
             order={activeOrder}
             setView={setView}
             onResetOrder={handleResetOrder}
+          />
+        )}
+
+        {currentView === 'admin' && (
+          <AdminDashboard 
+            orders={[]}
+            setView={setView}
+            onUpdateOrders={() => {}}
           />
         )}
       </main>
@@ -201,8 +228,10 @@ export default function App() {
         setView={setView}
       />
 
-      {/* Shared Footer component */}
-      <Footer setView={setView} />
+      {/* Footer - hidden on admin view */}
+      {currentView !== 'admin' && (
+        <Footer setView={setView} />
+      )}
 
     </div>
   );

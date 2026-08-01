@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, SlidersHorizontal, Info, Eye, Clock, Star, Flame, Sparkles, Plus, Minus, ArrowRight, Heart } from 'lucide-react';
+import { SlidersHorizontal, Info, Eye, Clock, Star, Flame, Sparkles, Plus, Minus, ArrowRight, Heart } from 'lucide-react';
 import { MenuItem, CartItem } from '../types';
 import { MENU_ITEMS } from '../data';
 
@@ -7,16 +7,12 @@ interface MenuPageProps {
   onAddToCart: (item: MenuItem, notes?: string) => void;
   onRemoveFromCart: (item: MenuItem) => void;
   cart: CartItem[];
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
 }
 
 export default function MenuPage({
   onAddToCart,
   onRemoveFromCart,
   cart,
-  searchQuery,
-  setSearchQuery,
 }: MenuPageProps) {
   const [activeCategory, setActiveCategory] = useState('All');
   const [satvikOnly, setSatvikOnly] = useState(false);
@@ -57,15 +53,6 @@ export default function MenuPage({
     // Satvik (No Onion No Garlic) match
     if (satvikOnly && !item.isSatvik) {
       return false;
-    }
-    // Text search query
-    if (searchQuery.trim() !== '') {
-      const q = searchQuery.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q)
-      );
     }
     return true;
   }).sort((a, b) => {
@@ -118,7 +105,7 @@ export default function MenuPage({
       </div>
 
       {/* Chef's Recommendations Showcase */}
-      {activeCategory === 'All' && searchQuery === '' && (
+      {activeCategory === 'All' && (
         <section className="mb-12" id="chefs-recommendations">
           <div className="flex items-center gap-2 mb-6">
             <Sparkles className="text-[#ac2d00]" size={20} />
@@ -384,7 +371,6 @@ export default function MenuPage({
               onClick={() => {
                 setActiveCategory('All');
                 setSatvikOnly(false);
-                setSearchQuery('');
               }}
               className="mt-4 px-4 py-2 bg-[#ac2d00] text-white rounded-xl text-xs font-semibold hover:bg-[#d63c05]"
             >

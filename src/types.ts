@@ -27,6 +27,14 @@ export interface DeliveryDetails {
   instructions?: string;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  createdAt?: string;
+}
+
 export interface Order {
   id: string;
   items: CartItem[];
@@ -36,7 +44,10 @@ export interface Order {
   total: number;
   deliveryDetails: DeliveryDetails;
   paymentMethod: string;
-  status: 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered';
+  status: 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
   estimatedTime: string;
   createdAt: string;
+  date: string;
+  user?: User;
+  deleted?: boolean;
 }

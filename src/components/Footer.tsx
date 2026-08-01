@@ -88,6 +88,7 @@ export default function Footer({ setView }: FooterProps) {
                 <span>About Kitchen Heritage</span>
               </button>
             </li>
+
           </ul>
         </div>
 
@@ -131,7 +132,12 @@ export default function Footer({ setView }: FooterProps) {
 
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pt-12 mt-12 border-t border-[#ffe9e2]/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[#ffe9e2]/60 relative z-10">
         <p>© 2026 Shri Ram Dhaba. All traditional rights reserved.</p>
-
+        <button 
+          onClick={() => handleFooterNav('admin')}
+          className="px-4 py-2 bg-[#ac2d00]/20 hover:bg-[#ac2d00] text-[#fdc826] hover:text-white rounded-lg font-semibold text-[10px] uppercase tracking-wider transition-all border border-[#ac2d00]/30 hover:border-[#ac2d00]"
+        >
+          🔐 Admin Panel
+        </button>
       </div>
     </footer>
   );

@@ -77,7 +77,7 @@ export const api = {
     if (data.token) setAdminToken(data.token);
     return data;
   },
-  adminLogout: () => { clearAdminToken(); return request('/admin/logout', { method: 'POST' }, false, true); },
+  adminLogout: async () => { try { await request('/admin/logout', { method: 'POST' }, false, true); } finally { clearAdminToken(); } },
   adminMe: () => request('/admin/me', {}, true, true),
   adminGetOrders: (status?: string) => request(`/admin/orders${status && status !== 'all' ? `?status=${status}` : ''}`, {}, true, true),
   adminUpdateOrderStatus: (id: string, status: string) => request(`/admin/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, true, true),

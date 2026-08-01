@@ -23,7 +23,7 @@ export default function CheckoutPage({
   const [instructions, setInstructions] = useState('');
   
   // Payment option - COD only
-  const [paymentMethod] = useState('COD');
+  const [paymentMethod] = useState('cod');
 
   // Validation
   const [errors, setErrors] = useState<Record<string, string>>({});

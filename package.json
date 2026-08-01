@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "server": "cd server && node index.js",
-    "start": "cd server && node index.js"
+    "start": "cd server && npm install && node index.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

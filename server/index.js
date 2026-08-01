@@ -52,6 +52,12 @@ const authLimiter = rateLimit({
   message: { error: 'Too many attempts. Please try again later.' },
 });
 
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many attempts. Please try again later.' },
+});
+
 const orderLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
@@ -61,7 +67,7 @@ const orderLimiter = rateLimit({
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/orders', orderLimiter, orderRoutes);
-app.use('/api/admin', authLimiter, adminRoutes);
+app.use('/api/admin', adminLimiter, adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
